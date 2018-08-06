@@ -1,11 +1,18 @@
+/**
+ * FileMerger class used to merge files. In the constructor it accepts two parameters,
+ * the file path to merged file(fileMergeTo) and the set of files(files) to merge.
+ *
+ * @author  Pijus Kumar Sarker
+ * @version 1.0
+ * @since   2018-08-04
+ **/
+
 package pijus.java.exercises;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
-//import java.lang.*;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.nio.channels.FileChannel;
@@ -25,6 +32,13 @@ public class FileMerger implements Callable<String> {
         return this.fileMergeTo;
     }
 
+    /**
+     * This method merges a set of files to a desired file
+     *
+     * @param files set of file paths that is going to merge
+     * @param fileMergeTo the file path where the file is going to merge
+     * @return void
+     **/
     public void mergeFiles (HashSet<String> files, String fileMergeTo) {
         Iterator<String> fileItr = files.iterator();
 
@@ -34,14 +48,17 @@ public class FileMerger implements Callable<String> {
         }
     }
 
+    /**
+     * This method merges one file to a desired file
+     *
+     * @param file the file path that is going to merge
+     * @param fileMergeTo the file path where the file is going to merge
+     * @return void
+     **/
     public void mergeFile(String file, String fileMergeTo) {
-
         Path outFile=Paths.get(fileMergeTo);
-
-        System.out.println("TO "+fileMergeTo);
         try(FileChannel out=FileChannel.open(outFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE,  StandardOpenOption.APPEND)) {
             Path inFile=Paths.get(file);
-            System.out.println(inFile+"...");
             try(FileChannel in=FileChannel.open(inFile, StandardOpenOption.READ)) {
                 for(long p=0, l=in.size(); p<l; )  {
                     p+=in.transferTo(p, l-p, out);
