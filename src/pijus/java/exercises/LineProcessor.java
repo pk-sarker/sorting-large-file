@@ -1,12 +1,17 @@
 package pijus.java.exercises;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.concurrent.Callable;
 
-public class LineProcessor implements Runnable {
+public class LineProcessor implements Callable<Hashtable<String, HashSet<String>>> {
 
-    private static FileOutputStream foutps = null;
+    private static Hashtable<String, HashSet<String>> alphabeticFileSet = new Hashtable<String, HashSet<String>>();
 
     static protected HashSet<String> words = new HashSet<String>();
     private String filePath = "";
@@ -16,14 +21,13 @@ public class LineProcessor implements Runnable {
         this.filePath = filePath;
         this.filePrefix = filePrefix;
     }
-    public void run() {
-        System.out.println(" Thread Line Processor running ");
+
+
+    public Hashtable<String, HashSet<String>> call() throws Exception {
+        System.out.println(Thread.currentThread().getName()+ " " + this.filePath + " (Start) ");
         try {
 
-            //this.process(this.filePath, this.filePrefix);
             Thread.sleep(1000);
-            //Get database connection, delete unused data from DB
-            //doDBProcessing();
             try {
                 process(this.filePath, this.filePrefix);
             }
@@ -34,6 +38,9 @@ public class LineProcessor implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println(Thread.currentThread().getName()+" (End)");//prints thread name
+        return LineProcessor.alphabeticFileSet;
+
     }
 
     public void process(String filePath, String filePrefix) throws IOException {
@@ -41,8 +48,8 @@ public class LineProcessor implements Runnable {
         File file = new File(filePath);
         FileInputStream inputStream = new FileInputStream(file);
         Scanner sc = new Scanner(inputStream, "UTF-8");
-        FileOutputStream out = new FileOutputStream(new File("input/"+filePrefix + "_test.txt"));
-        String alphFileName = "input/"+filePrefix + "_test_###.txt";
+        FileOutputStream out = new FileOutputStream(new File("io/"+filePrefix + "_test.txt"));
+        String alphFileName = "io/"+filePrefix + "_test_###.txt";
         try {
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
@@ -54,7 +61,6 @@ public class LineProcessor implements Runnable {
                         writeToAlphabetFile(word, alphFileName);
                     }
                 }
-
             }
 
             if (sc.ioException() != null) {
@@ -71,6 +77,10 @@ public class LineProcessor implements Runnable {
                 sc.close();
             }
         }
+
+        // delete test file
+        FreeDiskMemory freeDiskMemory = new FreeDiskMemory();
+        freeDiskMemory.deleteFile("io/"+filePrefix + "_test.txt");
     }
 
     public void writeToAlphabetFile(String word, String filePath) throws FileNotFoundException, IOException {
@@ -78,26 +88,29 @@ public class LineProcessor implements Runnable {
             if(word == "" || word.length() == 0 ) {
                 return;
             }
-
-            System.out.println("Word: " + word + " Len: "+ Integer.toString(word.length()));
-            String fname = filePath.replace("###", word.substring(0, 1));
+            word = word.replaceAll("[-+.^:,()]","");
+            String firstLetter = word.substring(0, 1).toUpperCase();
+            String fname = filePath.replace("###", firstLetter);
             File file = new File(fname);
-            FileOutputStream out = new FileOutputStream(file, true);
 
-            if(file.exists()) {
-                System.out.println(" File >> " + fname + " << exists");
-            } else {
-
+            if(!file.exists()) {
+                //System.out.println(" File >> " + fname + " << exists");
+                if(LineProcessor.alphabeticFileSet.containsKey(firstLetter)) {
+                    LineProcessor.alphabeticFileSet.get(firstLetter).add(fname);
+                } else {
+                    HashSet<String> temp = new HashSet<String>();
+                    temp.add(fname);
+                    LineProcessor.alphabeticFileSet.put(firstLetter, temp);
+                }
             }
-
+            FileOutputStream out = new FileOutputStream(file, true);
             out.write(word.getBytes());
             out.write("\n".getBytes());
             out.close();
-            //String alphFileName = "input/"+filePrefix + "_test_###.txt";
         } catch (FileNotFoundException ex) {
             System.out.print(ex);
         } finally {
-            System.out.println(" >> Added Word : "+word );
+            //System.out.println(" >> Added Word : "+word );
 
         }
 

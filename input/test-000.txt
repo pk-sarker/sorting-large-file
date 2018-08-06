@@ -1,7 +1,0 @@
-JDK 10 Release Notes
-
-The following notes describe important changes and information about this release. In some cases, the descriptions provide links to additional detailed information about an issue or a change. This page does not duplicate the descriptions provided by the Java SE 10 (18.3) ( JSR 383) specification, which provides informative background for all specification changes and might also include the identification of removed or deprecated APIs and features not described here. The Java SE 10 (18.3) ( JSR 383) specification provides links to:
-
-Annex 1: The complete Java SE 10 API Specification.
-
-Annex 2: An annotated API specification showing the exact differences relative to Java SE 9.

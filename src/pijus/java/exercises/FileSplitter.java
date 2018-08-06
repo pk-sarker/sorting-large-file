@@ -10,12 +10,7 @@ public class FileSplitter implements Runnable {
     public void run() {
         System.out.println(" File Splitter running ");
         try {
-
-
             Thread.sleep(5000);
-            //Get database connection, delete unused data from DB
-            //doDBProcessing();
-
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -44,6 +39,7 @@ public class FileSplitter implements Runnable {
             int bytesAmount = 0;
             while ((bytesAmount = bis.read(buffer)) > 0) {
                 System.out.println("bytesAmount " + Integer.toString(bytesAmount));
+
                 //write each chunk of data into separate file with different number in name
                 String filePartName = String.format("%s-%03d.txt", fileName.substring(0, fileName.lastIndexOf('.')), partCounter++);
                 System.out.println("filePartName: "+filePartName + " >> Parent: "+ f.getParent());
