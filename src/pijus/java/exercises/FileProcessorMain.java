@@ -137,7 +137,7 @@ public class FileProcessorMain {
      * Each thread creates a number of new files where each file contains the words that started with same letter.
      * For example, Thread 1 is processing sample-001.txt file. On completion, it will create some files like:
      * T_1_sample_A, T_1_sample_T, T_1_sample_M, ....
-     * 
+     *
      * @param  splittedFiles  A set of file names that are obtained from initial split
      * @return  void
      */
