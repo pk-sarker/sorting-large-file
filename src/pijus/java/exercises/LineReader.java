@@ -47,7 +47,7 @@ public class LineReader {
             sc = new Scanner(inputStream, "UTF-8");
 
             String fileName = file.getName();
-            File newFile = new File("temp.txt");
+            File newFile = new File("io","temp.txt");
             FileOutputStream out = new FileOutputStream(newFile);
             String filePartName = "";
             while (sc.hasNextLine()) {
@@ -67,7 +67,7 @@ public class LineReader {
                         int bytesInWord = word.getBytes().length;
                         if(wordsByteCount == 0 || (wordsByteCount + bytesInWord) > maxFileSizeInByte) {
                             filePartName = createNewFile(fileName, partCounter++);
-                            out = new FileOutputStream(new File("input", filePartName));
+                            out = new FileOutputStream(new File("io", filePartName));
                             splitedFiles.add(filePartName);
                         }
                         out.write(word.getBytes());
@@ -83,7 +83,7 @@ public class LineReader {
 
                 if(bytesAmount == 0 || (bytesAmount + bytesInline) > maxFileSizeInByte) {
                     filePartName = createNewFile(fileName, partCounter++);
-                    out = new FileOutputStream(new File("input", filePartName));
+                    out = new FileOutputStream(new File("io", filePartName));
                     splitedFiles.add(filePartName);
                 }
                 bytesAmount += bytesInline;
