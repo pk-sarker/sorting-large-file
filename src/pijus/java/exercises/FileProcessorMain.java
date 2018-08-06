@@ -12,9 +12,9 @@
  *
  * @author  Pijus Kumar Sarker
  * @version 1.0
- * @since   2018-03-31
+ * @since   2018-07-31
  * @link https://github.com/pk-sarker/sorting-large-file
- */
+ **/
 
 package pijus.java.exercises;
 
@@ -89,7 +89,7 @@ public class FileProcessorMain {
 
         // Sort the words in each that contains the words starting with same letter/character and kept in a new file
         // A thread has been assigned to each file ( A, T, M, Z ...) to do the sorting in parallel.
-        // File A -> { }
+        // File { A.txt -> sorted_A.txt, T.txt -> sorted_T.txt, M.txt -> sorted_M.txt, ...  }
 
         Hashtable<String, String> sortedFiles = sortAlphabeticFiles();
 
@@ -107,24 +107,40 @@ public class FileProcessorMain {
         }
 
 
-        // Merge all the alphabetic files ( A, T, M, Z ..) in sequence.
+        // Merge all the alphabetic files ( sorted_A, sorted_T, sorted_M, sorted_Z ...) in sequence.
         finalMerge(sortedFiles);
 
         System.out.println("Memory Use: " + (double) (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024);
     }
 
-    public static void displayStateAndIsAlive(Thread thread) {
-        // java.lang.Thread.State can be NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED
-        System.out.println(">> " + thread.getName() + " >> State: " + thread.getState());
-        System.out.println(">> " + thread.getName() + " >> Is alive?: " + thread.isAlive());
-    }
-
+    /**
+     * Returns a set of file names which are splitted from large file.
+     * Consider Sample.txt is the large file. In this step that Sample.txt
+     * file is splitted in to smaller files: sample-001.txt, sample-002.txt ... sample-nnn.txt
+     *
+     * @param  inputFile  an relative path of the input file
+     * @return  returns a set of strings where each element of the set is a path to an splitted file.
+     */
     public static Set<String> splitFile(String inputFile) throws IOException {
         LineReader reader = new LineReader(32);
         reader.ScanByLine(inputFile);
         return reader.getSplitedFiles();
     }
 
+    /**
+     * Returns a set of file names which are splitted from large file.
+     * Consider { sample-001.txt, sample-002.txt ... sample-nnn.txt } are the smaller
+     * files obtained after spliting Sample.txt.
+     * In this step, a thread is created/assigned to process each file. In the thread-pool
+     * fixed number of threads are used.
+     *
+     * Each thread creates a number of new files where each file contains the words that started with same letter.
+     * For example, Thread 1 is processing sample-001.txt file. On completion, it will create some files like:
+     * T_1_sample_A, T_1_sample_T, T_1_sample_M, ....
+     * 
+     * @param  splittedFiles  A set of file names that are obtained from initial split
+     * @return  void
+     */
     public static void splitFileByWordsFirstLetter(Set<String> splittedFiles) {
         Integer numberOfThreads = 5;
         Iterator<String> splittedFilesItr = splittedFiles.iterator();
@@ -145,7 +161,6 @@ public class FileProcessorMain {
 
                 while(itr.hasNext()){
                     String fileKey = itr.next();
-                    //StringBuffer fileKey = new StringBuffer(itr.next());
 
                     if(FileProcessorMain.alphabeticFiles.containsKey(fileKey)) {
                         FileProcessorMain.alphabeticFiles.get(fileKey).addAll(result.get(fileKey));

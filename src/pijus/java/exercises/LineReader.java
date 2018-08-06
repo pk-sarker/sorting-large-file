@@ -30,16 +30,11 @@ public class LineReader {
     }
 
     public void ScanByLine(String inputFile) throws IOException {
-        Long mb = 1024L * 1024L;
-        System.out.println(">> Max Memory: " + Long.toString(getMaxMemory()/mb));
-        System.out.println(">> Used Memory: " + Long.toString(getUsedMemory()/mb));
-        System.out.println(">> Total Memory: " + Long.toString(getTotalMemory()/mb));
-        System.out.println(">> Free Memory: " + Long.toString(getFreeMemory()/mb));
         FileInputStream inputStream = null;
         Scanner sc = null;
         try {
             File file = new File(inputFile);
-            int maxFileSizeInByte = getMaxByte(); // 1MB
+            int maxFileSizeInByte = getMaxByte();
             int bytesAmount = 0;
             int partCounter = 0;
 
@@ -96,8 +91,6 @@ public class LineReader {
                     bytesAmount = 0;
                     bytesAmount += bytesInline;
                 }
-
-                // System.out.println(line + " --> " + bytesInline);
             }
             // note that Scanner suppresses exceptions
             if (sc.ioException() != null) {
@@ -111,31 +104,10 @@ public class LineReader {
                 sc.close();
             }
         }
-
-        System.out.println("<< Max Memory: " + Long.toString(getMaxMemory()/mb));
-        System.out.println("<< Used Memory: " + Long.toString(getUsedMemory()/mb));
-        System.out.println("<< Total Memory: " + Long.toString(getTotalMemory()/mb));
-        System.out.println("<< Free Memory: " + Long.toString(getFreeMemory()/mb));
     }
 
     public String createNewFile(String baseFileName, Integer counter) {
         return String.format("%s-%03d.txt", baseFileName.substring(0, baseFileName.lastIndexOf('.')), counter);
-    }
-
-    public static long getMaxMemory() {
-        return Runtime.getRuntime().maxMemory();
-    }
-
-    public static long getUsedMemory() {
-        return getMaxMemory() - getFreeMemory();
-    }
-
-    public static long getTotalMemory() {
-        return Runtime.getRuntime().totalMemory();
-    }
-
-    public static long getFreeMemory() {
-        return Runtime.getRuntime().freeMemory();
     }
 
 }
