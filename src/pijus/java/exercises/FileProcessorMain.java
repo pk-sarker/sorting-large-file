@@ -7,13 +7,13 @@
  * Step 1: Slice the big file into smaller files.
  * Step 2: Create one thread for each file to process. Use a threadpool with fixed number of threads.
  * Step 2.1: Each thread will create new files for the words starting with same letter.( like t1-a.txt, t1-b.txt ..)
- * Step 3: Then merge each files with same letters ( t1-a.txt, t2-a.txt, ...) and create a new file (a.txt) with all the words starting with same letter. And sort it.
- * Step 4: Merge all the files,26,(a.txt, b.txt ... z.txt)
+ * Step 3: Then merge each files with same letters ( t1-a.txt, t2-a.txt, ...) and create a new file (a.txt) with all the words starting with same letter.
+ * Step 4: Sort the words in each file (a.txt, b.txt .....) and write to a new file (sorted_a.txt, sorted_b.txt, ...)
+ * Step 4: Merge all the files,(sorted_a.txt, sorted_b.txt ... )
  *
  * @author  Pijus Kumar Sarker
  * @version 1.0
- * @since   2018-07-31
- * @link https://github.com/pk-sarker/sorting-large-file
+ * @since   2018-08-04
  **/
 
 package pijus.java.exercises;
@@ -73,27 +73,27 @@ public class FileProcessorMain {
 
         // Merge all the files that contains words starting with same letter to one file
         // Consider
-        //      Thread 1 process a file split Sample-001.txt and produced T_1_sample_A, T_1_sample_T, T_1_sample_M files.
-        //      Thread 2 process a file split Sample-005.txt and produced T_2_sample_Z, T_2_sample_C, T_2_sample_A files.
-        //      Thread 3 process a file split Sample-003.txt and produced T_3_sample_M, T_3_sample_A, T_3_sample_L, T_3_sample_I, T_3_sample_T files.
+        //      Thread 1 process a file split Sample-001.txt and produced T_1_sample_A.txt, T_1_sample_T.txt, T_1_sample_M.txt files.
+        //      Thread 2 process a file split Sample-005.txt and produced T_2_sample_Z.txt, T_2_sample_C.txt, T_2_sample_A.txt files.
+        //      Thread 3 process a file split Sample-003.txt and produced T_3_sample_M.txt, T_3_sample_A.txt, T_3_sample_L.txt, T_3_sample_I.txt, T_3_sample_T.txt files.
         // Then,
-        // File A -> T_1_sample_A + T_2_sample_A + T_3_sample_A
-        // File T -> T_1_sample_T + T_3_sample_T
-        // File M -> T_1_sample_M + T_3_sample_M
-        // File Z -> T_2_sample_Z
-        // File C -> T_2_sample_C
-        // File L -> T_3_sample_L
-        // File I -> T_3_sample_I
+        // File A.txt -> T_1_sample_A.txt + T_2_sample_A.txt + T_3_sample_A.txt
+        // File T.txt -> T_1_sample_T.txt + T_3_sample_T.txt
+        // File M.txt -> T_1_sample_M.txt + T_3_sample_M.txt
+        // File Z.txt -> T_2_sample_Z.txt
+        // File C.txt -> T_2_sample_C.txt
+        // File L.txt -> T_3_sample_L.txt
+        // File I.txt -> T_3_sample_I.txt
 
         mergeAlphabeticFiles();
 
         // Sort the words in each that contains the words starting with same letter/character and kept in a new file
-        // A thread has been assigned to each file ( A, T, M, Z ...) to do the sorting in parallel.
+        // A thread has been assigned to each file ( A.txt, T.txt, M.txt, Z.txt ...) to do the sorting in parallel.
         // File { A.txt -> sorted_A.txt, T.txt -> sorted_T.txt, M.txt -> sorted_M.txt, ...  }
 
         Hashtable<String, String> sortedFiles = sortAlphabeticFiles();
 
-        // Delete unused files: T_1_sample_A, T_1_sample_T, T_1_sample_M ... T_3_sample_I, T_3_sample_T
+        // Delete unused files: T_1_sample_A.txt, T_1_sample_T.txt, T_1_sample_M.txt ... T_3_sample_I.txt, T_3_sample_T.txt
         Set<String> keys = FileProcessorMain.alphabeticFiles.keySet();
         Iterator<String> itr = keys.iterator();
 
@@ -107,7 +107,7 @@ public class FileProcessorMain {
         }
 
 
-        // Merge all the alphabetic files ( sorted_A, sorted_T, sorted_M, sorted_Z ...) in sequence.
+        // Merge all the alphabetic files ( sorted_A.txt, sorted_T.txt, sorted_M.txt, sorted_Z.txt ...) in sequence.
         finalMerge(sortedFiles);
 
         System.out.println("Memory Use: " + (double) (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1024);
@@ -122,13 +122,14 @@ public class FileProcessorMain {
      * @return  returns a set of strings where each element of the set is a path to an splitted file.
      */
     public static Set<String> splitFile(String inputFile) throws IOException {
-        LineReader reader = new LineReader(32);
+        FileSplitter reader = new FileSplitter(32);
         reader.ScanByLine(inputFile);
         return reader.getSplitedFiles();
     }
 
     /**
-     * Returns a set of file names which are splitted from large file.
+     * Create a set of files for each file, obtained by spliting the large file.
+     * Each new file contains the words starting with same letter.
      * Consider { sample-001.txt, sample-002.txt ... sample-nnn.txt } are the smaller
      * files obtained after spliting Sample.txt.
      * In this step, a thread is created/assigned to process each file. In the thread-pool
@@ -136,7 +137,7 @@ public class FileProcessorMain {
      *
      * Each thread creates a number of new files where each file contains the words that started with same letter.
      * For example, Thread 1 is processing sample-001.txt file. On completion, it will create some files like:
-     * T_1_sample_A, T_1_sample_T, T_1_sample_M, ....
+     * T_1_sample_A.txt, T_1_sample_T.txt, T_1_sample_M.txt, ....
      *
      * @param  splittedFiles  A set of file names that are obtained from initial split
      * @return  void
@@ -145,15 +146,15 @@ public class FileProcessorMain {
         Integer numberOfThreads = 5;
         Iterator<String> splittedFilesItr = splittedFiles.iterator();
 
-        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads); //creating a pool of 5 threads
+        // creating a pool of 5 threads, will change based on memory allocation to JVM,
+        // or number of distributed sub-systems
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
         int fileCount = 0;
         while(splittedFilesItr.hasNext()) {
             Callable worker = new LineProcessor("io/" + splittedFilesItr.next(), "t"+Integer.toString(fileCount++));
             Future<Hashtable<String, HashSet<String>>> future = executor.submit(worker);
 
             Hashtable<String, HashSet<String>> result = new Hashtable<String, HashSet<String>>();
-            // { a: { abc, axr, amn}, b: { bbb, bcd, bgh } }
-            // @TODO: add
             try {
                 result = future.get();
                 Set<String> keys = result.keySet();
@@ -178,6 +179,11 @@ public class FileProcessorMain {
         awaitTerminationAfterShutdown(executor);
     }
 
+    /**
+     * This method displays Alphabetic files(for A = {T_1_sample_A.txt, T_3_sample_A.txt .. })
+     *
+     * @return  void
+     */
     public static void displayAlphabeticFiles() {
         Set<String> keys = FileProcessorMain.alphabeticFiles.keySet();
         Iterator<String> itr = keys.iterator();
@@ -195,6 +201,12 @@ public class FileProcessorMain {
         }
     }
 
+    /**
+     * Wait for a shutdown pool to fully terminate, or until the timeout has expired.
+     *
+     * @param threadPool
+     * @return void
+     */
     public static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
         threadPool.shutdown();
         try {
@@ -207,19 +219,16 @@ public class FileProcessorMain {
         }
     }
 
-    // {
-    //   a: {
-    //     abc, axrio, a9, as
-    //   },
-    //   a: {
-    //     bco, bbc
-    //   },
-    // }
-    //
-    // ->
-    // {
-    //  a, b, c, ... z
-    // }
+    /**
+     * This method merges all the alphabetic files associated with the words starting with same letter.
+     * Consider, T_1_sample_A.txt, T_1_sample_T.txt, T_2_sample_M.txt, T_2_sample_T.txt are the alphabetic files.
+     * It will create the following files, excluding duplicate words,
+     * A.txt = T_1_sample_A.txt
+     * T.txt = T_1_sample_T.txt + T_2_sample_T.txt
+     * M.txt = T_2_sample_M.txt
+     *
+     * @return void
+     **/
     public static void mergeAlphabeticFiles() {
         System.out.println("======================= mergeAlphabeticFiles =======================");
         Set<String> keys = FileProcessorMain.alphabeticFiles.keySet();
@@ -232,57 +241,43 @@ public class FileProcessorMain {
 
             // create a base file for each distinct alphabet
             // pass base file(where to merge), and the file to merge
-
             String fileKey = fileItr.next();
             FileProcessorMain.mergedAlphabeticFiles.put(fileKey.toUpperCase(), "io/"+fileKey.toUpperCase()+".txt");
             Callable worker = new FileMerger("io/"+fileKey.toUpperCase()+".txt", FileProcessorMain.alphabeticFiles.get(fileKey));
             Future<String> future = executor.submit(worker);
         }
 
-        executor.shutdown();
+        awaitTerminationAfterShutdown(executor);
 
+        // some time to complete the writing process
         try {
-            if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException ex) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-
-        try {
-            Thread.sleep(5000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println("======================= End mergeAlphabeticFiles =======================");
     }
 
+    /**
+     * This method sort the words in each alphabetic files(A.txt, B.txt)  and creates a new file(sorted_A.txt, sorted_B.txt ...) with sorted words.
+     * A thread pool is used to read, sort and write. To obtain parallel process each file processed by one single thread.
+     * When all thread completes their processing it returns a Hashtable with newly created file names(sorted_A.txt, sorted_B.txt ...)
+     *
+     * @return void Hashtable
+     **/
     public static Hashtable<String, String> sortAlphabeticFiles() {
         System.out.println("======================= sortAlphabeticFiles =======================");
         Hashtable<String, String> sortedAlphabeticFile = new Hashtable<String, String>();
         Set<String> keys = FileProcessorMain.mergedAlphabeticFiles.keySet();
         Iterator<String> fileItr = keys.iterator();
 
-        ExecutorService executor = Executors.newFixedThreadPool(5); //creating a pool of 5 threads
-        // {
-        //   a: {
-        //     abc, axrio, a9, as
-        //   },
-        //   a: {
-        //     bco, bbc
-        //   },
-        // }
-        //
-        // ->
-        // {
-        //  a, b, c, ... z
-        // }
+        // creating a pool of 5 threads, will change based on memory allocation to JVM,
+        // or number of distributed sub-systems
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+
         int fileCount = 0;
         while(fileItr.hasNext()) {
 
-            // create a base file for each distinct alphabet
-            // pass base file(where to merge), and the file to merge
             String fileKey = fileItr.next();
             Callable worker = new MergeSort(fileKey, FileProcessorMain.mergedAlphabeticFiles.get(fileKey));
 
@@ -291,6 +286,7 @@ public class FileProcessorMain {
             try {
                 result = future.get();
                 sortedAlphabeticFile.put(fileKey, result.get(fileKey));
+                // Delete temporary files
                 FileProcessorMain.freeDiskMemory.deleteFile(FileProcessorMain.mergedAlphabeticFiles.get(fileKey));
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
@@ -300,22 +296,20 @@ public class FileProcessorMain {
         executor.shutdown();
         awaitTerminationAfterShutdown(executor);
 
-        // Delete temporary files
-//        keys = FileProcessorMain.mergedAlphabeticFiles.keySet();
-//        fileItr = keys.iterator();
-//
-//        while(fileItr.hasNext()) {
-//            FileProcessorMain.freeDiskMemory.deleteFile(FileProcessorMain.mergedAlphabeticFiles.get(fileItr.next()));
-//        }
-
         System.out.println("======================= END sortAlphabeticFiles =======================");
         return sortedAlphabeticFile;
     }
 
 
 
-    // merge {A, B, C, D .... Z } to SortedFile.
-
+    //
+    /**
+     * This method, finalMerge, merged all the sorted files in ascending order to output file.
+     * Merges { sorted_A.txt, sorted_B.txt, sorted_C.txt .... } files to output file, SORTED_FILE.txt
+     *
+     * @param sortedFiles
+     * @return void
+     **/
     public static void finalMerge(Hashtable<String, String> sortedFiles) {
         System.out.println("======================= finalMerge =======================");
 
@@ -328,7 +322,6 @@ public class FileProcessorMain {
         FileMerger merger = new FileMerger("io/SORTED_FILE.txt", new HashSet<String>());
         while (letters.hasNext()) {
             String letter = letters.next();
-            //System.out.println(">> " + letter + " " + sortedFiles.get(letter));
             merger.mergeFile(sortedFiles.get(letter), "io/SORTED_FILE.txt");
             FileProcessorMain.freeDiskMemory.deleteFile(sortedFiles.get(letter));
 

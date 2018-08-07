@@ -1,3 +1,12 @@
+/**
+ * FreeDiskMemory class used to delete file from disk
+ *
+ * @author  Pijus Kumar Sarker
+ * @version 1.0
+ * @since   2018-08-04
+ **/
+
+
 package pijus.java.exercises;
 
 import java.io.IOException;

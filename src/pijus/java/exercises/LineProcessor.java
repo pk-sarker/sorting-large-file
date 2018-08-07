@@ -1,9 +1,14 @@
+/**
+ * LineProcessor class used to parse a file and create files with words starting with same letter
+ *
+ * @author  Pijus Kumar Sarker
+ * @version 1.0
+ * @since   2018-08-04
+ **/
+
 package pijus.java.exercises;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -22,7 +27,11 @@ public class LineProcessor implements Callable<Hashtable<String, HashSet<String>
         this.filePrefix = filePrefix;
     }
 
-
+    /**
+     *  This method parses process input file and creates a set of files where the words starts with same letter
+     *
+     *  @return returns a Hashtable
+     **/
     public Hashtable<String, HashSet<String>> call() throws Exception {
         System.out.println(Thread.currentThread().getName()+ " " + this.filePath + " (Start) ");
         try {
@@ -43,6 +52,15 @@ public class LineProcessor implements Callable<Hashtable<String, HashSet<String>
 
     }
 
+    /**
+     *  This method parses a file and creates a set of files where each file contains words starts with same letter
+     *  After parsing it deletes the input file.
+     *
+     *  @param filePath input file name
+     *  @param filePrefix the file key for each thread, like t0, t1 ...
+     *
+     *  @return void
+     **/
     public void process(String filePath, String filePrefix) throws IOException {
         System.out.println("FilePath: "+ filePath + "  Prefix: "+filePrefix);
         File file = new File(filePath);
@@ -83,6 +101,13 @@ public class LineProcessor implements Callable<Hashtable<String, HashSet<String>
         freeDiskMemory.deleteFile("io/"+filePrefix + "_test.txt");
     }
 
+    /**
+     *  This method writes a word to a given file
+     *
+     *  @param word input word
+     *  @param filePath the file path where the word will be written.
+     *  @return void
+     **/
     public void writeToAlphabetFile(String word, String filePath) throws FileNotFoundException, IOException {
         try {
             if(word == "" || word.length() == 0 ) {
@@ -94,7 +119,6 @@ public class LineProcessor implements Callable<Hashtable<String, HashSet<String>
             File file = new File(fname);
 
             if(!file.exists()) {
-                //System.out.println(" File >> " + fname + " << exists");
                 if(LineProcessor.alphabeticFileSet.containsKey(firstLetter)) {
                     LineProcessor.alphabeticFileSet.get(firstLetter).add(fname);
                 } else {
@@ -110,7 +134,6 @@ public class LineProcessor implements Callable<Hashtable<String, HashSet<String>
         } catch (FileNotFoundException ex) {
             System.out.print(ex);
         } finally {
-            //System.out.println(" >> Added Word : "+word );
 
         }
 
